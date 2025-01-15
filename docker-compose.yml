@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    links:
+      - mysql
+    env_file:
+      - .env
+    command: sh -c "/wait && flask --app app/main.py run --host=0.0.0.0"
+    volumes:
+      - .:/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+  mysql:
+    image: mysql:8.0
+    env_file:
+      - .env
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      retries: 5
+      timeout: 5s
+      interval: 10s
