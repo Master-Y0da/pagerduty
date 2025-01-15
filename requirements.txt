@@ -1,0 +1,9 @@
+flask[async]
+sqlalchemy[asyncio]
+pytest
+pandas
+httpx
+flask-restx
+pymysql
+cryptography
+pydantic==1.10
