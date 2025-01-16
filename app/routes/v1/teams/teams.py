@@ -6,18 +6,22 @@ from .data.team_data import TeamData
 ns = Namespace('teams', description='Teams')
 
 
-@ns.route('/')
-class Teams(Resource):
+class TeamsResource(Resource):
 
     def __init__(self, *args, **kwargs):
-        super(Teams, self).__init__(*args, **kwargs)
-        self.session = current_app.db_session["incidents"]
+        super(TeamsResource, self).__init__(*args, **kwargs)
+        self.session = current_app.db_session["teams"]
         self.data_instance = TeamData(self.session)
 
-    
+@ns.route('/by-service-status')
+class Teams(TeamsResource):
+
     @ns.response(200, 'Incidents')
     def get(self):
-        return self.data_instance.get_all_groupe_by_service()
+        return self.data_instance.number_of_teams_and_related_services()
 
 
-
+@ns.route('/by-service-status/csv-report')
+class CsvReport(TeamsResource):
+    def get(self):
+        return self.data_instance.get_csv_report()

@@ -9,7 +9,10 @@ def save_services(services):
     with session() as s:
         with s.begin():
             for item in services["services"]:
-                result = Service(name=item["name"], id_service=item["id"], description=item["description"], status=item["status"])
+                result = Service(name=item["name"], id_service=item["id"],
+                    description=item["description"], status=item["status"],
+                    team=item["teams"]
+                )
                 s.add(result)
         s.commit()
 
@@ -17,7 +20,7 @@ def save_services(services):
 async def get_services():
     async with httpx.AsyncClient(timeout=60) as client:
         try:
-            response = await client.get(os.getenv('PAGERDUTY_API_SERVICES'), 
+            response = await client.get(os.getenv('PAGERDUTY_API_SERVICES'),
                         headers={"Authorization": f"Token token={os.getenv('PAGERDUTY_API_KEY')}"})
         except httpx.HTTPStatusError as e:
             print(e)
@@ -25,7 +28,7 @@ async def get_services():
         except httpx.RequestError as e:
             print(e)
             raise e
-        
+
         save_services(response.json())
 
         return response.json()

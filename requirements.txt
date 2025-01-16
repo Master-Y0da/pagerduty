@@ -7,3 +7,4 @@ flask-restx
 pymysql
 cryptography
 pydantic==1.10
+matplotlib

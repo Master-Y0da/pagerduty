@@ -1,21 +1,22 @@
 
 from ..models import Service
 from ..serializers.ServiceSerializer import ServiceSerializer, ServiceGroupByIncidentSerializer
-from flask import current_app
+from flask import current_app, Response
 from typing import Dict, Any
 import asyncio, httpx
+from pandas import DataFrame as df
 
 
 class ApiClient:
     def __init__(self, base_url: str = "http://localhost:5000"):
         self.base_url = base_url
-        
+
     async def _get_incidents(self) -> Dict[str, Any]:
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(f"{self.base_url}/api/v1/incidents/")
             response.raise_for_status()
             return response.json()
-            
+
     def get_incidents(self) -> Dict[str, Any]:
         try:
             return asyncio.run(self._get_incidents())
@@ -34,7 +35,7 @@ class ServiceData():
         with self.session() as s:
             result = s.query(Service).count()
             return result
-        
+
     def get_service_name(self, id_service):
         with self.session() as s:
             result = s.query(Service).filter(Service.id_service == id_service).first()
@@ -46,7 +47,7 @@ class ServiceData():
             result = s.query(Service).all()
             pydantic_result = [ServiceSerializer.from_orm(item) for item in result]
             return [item.dict() for item in pydantic_result]
-        
+
     def count_all_and_group_by_incident(self):
         with self.session() as s:
             incidents = self.api_client.get_incidents()
@@ -60,3 +61,23 @@ class ServiceData():
             return [ServiceGroupByIncidentSerializer(
                 name=item["service"],
                 count=item["count"]).dict() for item in incidents]
+
+
+    def get_csv_report(self, report_type):
+
+        data, csv = None, None
+
+        if report_type == 'count':
+            data = self.count_all()
+            csv = df({
+                "number_of_services": [data]
+            })
+        elif report_type == 'incident-count':
+            data = self.count_all_and_group_by_incident()
+            csv = df(data)
+
+        return Response(
+            csv.to_csv(index=False),
+            mimetype="text/csv",
+            headers={"Content-disposition":
+                     "attachment; filename=services.csv"})

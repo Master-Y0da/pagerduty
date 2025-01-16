@@ -1,4 +1,5 @@
 from pydantic import BaseModel, ConfigDict
+from typing import List, Optional, Dict, Any
 
 
 class ServiceSerializer(BaseModel):
@@ -7,6 +8,7 @@ class ServiceSerializer(BaseModel):
     name: str
     description: str=None
     status: str
+    team : Optional[List[Dict[str, Any]]]
 
     class Config:
         orm_mode = True

@@ -6,7 +6,8 @@ import os
 DB_SCHEMAS={
     "services": "services",
     "incidents": "incidents",
-    "teams": "teams"
+    "teams": "teams",
+    "escalation_policies": "escalation_policies"
 }
 
 Bases = { key : declarative_base() for key in DB_SCHEMAS.keys() }
@@ -15,17 +16,17 @@ def manage_db_connection():
 
     def get_db_url():
         return f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('MYSQL_ROOT_PASSWORD')}@{os.getenv('MYSQL_HOST')}:{os.getenv('MYSQL_PORT')}/{os.getenv('MYSQL_DATABASE')}"
-    
+
     def generate_engine(DATABASE_URL):
          return {
             schema_name: create_engine(f"{DATABASE_URL}", echo=True)
             for key, schema_name in DB_SCHEMAS.items() }
-    
+
     def generate_sessions(engines):
         return {
             key: sessionmaker(bind=engine, expire_on_commit=False)
             for key, engine in engines.items() }
-    
+
     def generate_schemas(engine, schema,base):
         with engine.begin() as conn:
             conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {schema}"))
@@ -46,4 +47,3 @@ def manage_db_connection():
 
     current_session = generate_sessions(engines)
     return current_session
-        

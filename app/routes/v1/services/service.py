@@ -1,3 +1,4 @@
+from wsgiref import headers
 from flask import Blueprint, current_app
 from flask_restx import Namespace, Resource
 from .data.service_data import ServiceData
@@ -6,46 +7,49 @@ from .data.service_data import ServiceData
 ns = Namespace('services', description='Services')
 
 
-@ns.route('/')
-class Services(Resource):
+class ServicesResource(Resource):
 
     def __init__(self, *args, **kwargs):
-        super(Services, self).__init__(*args, **kwargs)
+        super(ServicesResource, self).__init__(*args, **kwargs)
         self.session = current_app.db_session["services"]
         self.data_instance = ServiceData(self.session)
 
-    
+
+@ns.route('/')
+class Services(ServicesResource):
+
     @ns.response(200, 'Services')
     def get(self):
         return self.data_instance.get_all()
-        
-    
+
+
 @ns.route('/count')
-class ServicesCount(Resource):
-
-    def __init__(self, *args, **kwargs):
-        super(ServicesCount, self).__init__(*args, **kwargs)
-        self.session = current_app.db_session["services"]
-        self.data_instance = ServiceData(self.session)
-
-    
-    @ns.response(200, 'Services Count')
+class ServicesCount(ServicesResource):
+    @ns.response(200, 'success')
     def get(self):
         total = self.data_instance.count_all()
         return {"number_of_services": total}
 
 
 @ns.route('/incident-count')
-class IncidentCount(Resource):
+class IncidentCount(ServicesResource):
 
-    def __init__(self, *args, **kwargs):
-        super(IncidentCount, self).__init__(*args, **kwargs)
-        self.session = current_app.db_session["incidents"]
-        self.data_instance = ServiceData(self.session)
-
-    
-    @ns.response(200, 'Incidents Count')
+    @ns.response(200, 'success')
     def get(self):
         return self.data_instance.count_all_and_group_by_incident()
 
 
+@ns.route('/count/csv-report')
+class CsvReportCount(ServicesResource):
+
+    @ns.response(200, 'success', headers={'Content-Disposition': 'attachment; filename=report.csv'})
+    def get(self):
+        return self.data_instance.get_csv_report('count')
+
+
+@ns.route('/incident-count/csv-report')
+class CsvReport(ServicesResource):
+
+    @ns.response(200, 'success', headers={'Content-Disposition': 'attachment; filename=report.csv'})
+    def get(self):
+        return self.data_instance.get_csv_report('incident-count')
