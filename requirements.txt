@@ -1,6 +1,8 @@
 flask[async]
 sqlalchemy[asyncio]
 pytest
+pytest-asyncio
+pytest-mock
 pandas
 httpx
 flask-restx
